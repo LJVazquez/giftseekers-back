@@ -14,4 +14,82 @@ model User {
   id       Int    @id @default(autoincrement())
   username String @unique
   password String
+  gifts    Gift[] @relation("Author")
+  seeking  Gift[] @relation("SeekingGifts")
+}
+
+model Gift {
+  id          Int      @id @default(autoincrement())
+  active      Boolean  @default(true)
+  name        String
+  description String
+  city        City
+  location    String
+  lat         Float
+  lng         Float
+  difficulty  Int      @default(1)
+  startDate   DateTime @default(now())
+  author      User     @relation("Author", fields: [authorId], references: [id])
+  authorId    Int
+  imageUrl    String
+  // image          Image           @relation(fields: [imageId], references: [id])
+  // imageId        Int             @unique
+  seekers     User[]   @relation("SeekingGifts")
+}
+
+// model Image {
+//   id   Int    @id @default(autoincrement())
+//   url  String
+//   gift Gift?
+// }
+
+enum City {
+  AGRONOMIA
+  ALMAGRO
+  BALVANERA
+  BARRACAS
+  BELGRANO
+  BOEDO
+  CABALLITO
+  CHACARITA
+  COGHLAN
+  COLEGIALES
+  CONSTITUCION
+  FLORES
+  FLORESTA
+  LA_BOCA
+  LA_PATERNAL
+  LINIERS
+  MATADEROS
+  MONTE_CASTRO
+  MONTSERRAT
+  NUEVA_POMPEYA
+  NUNEZ
+  PALERMO
+  PARQUE_AVELLANEDA
+  PARQUE_CHACABUCO
+  PARQUE_CHAS
+  PARQUE_PATRICIOS
+  PUERTO_MADERO
+  RECOLETA
+  RETIRO
+  SAAVEDRA
+  SAN_CRISTOBAL
+  SAN_NICOLAS
+  SAN_TELMO
+  VERSALLES
+  VILLA_CRESPO
+  VILLA_DEVOTO
+  VILLA_GENERAL_MITRE
+  VILLA_LUGANO
+  VILLA_LURO
+  VILLA_ORTUZAR
+  VILLA_PUEYRREDON
+  VILLA_REAL
+  VILLA_RIACHUELO
+  VILLA_SANTA_RITA
+  VILLA_SOLDATI
+  VILLA_URQUIZA
+  VILLA_DEL_PARQUE
+  VELEZ_SARSFIELD
 }

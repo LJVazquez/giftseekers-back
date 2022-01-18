@@ -28,7 +28,10 @@ app.get(API_VERSION + '/users/:id', async (req, res) => {
 	try {
 		const user = await prisma.user.findUnique({
 			where: { id: id },
-			include: { gifts: { include: { seekers: true } }, seeking: true },
+			include: {
+				gifts: { include: { seekers: true } },
+				seeking: { include: { seekers: true } },
+			},
 		});
 		res.json(user);
 	} catch (e) {

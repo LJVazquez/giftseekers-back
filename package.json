@@ -6,6 +6,7 @@
 	"scripts": {
 		"start": "node index.js",
 		"dev": "nodemon index.js",
+		"apollo": "nodemon apollo.js",
 		"json-server": "json-server --watch db.json",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
@@ -21,10 +22,13 @@
 	"homepage": "https://github.com/LJVazquez/giftseekers-back#readme",
 	"dependencies": {
 		"@prisma/client": "^3.6.0",
+		"apollo-server": "^3.6.1",
+		"apollo-server-core": "^3.6.1",
 		"cors": "^2.8.5",
 		"dotenv": "^10.0.0",
 		"express": "^4.17.1",
 		"express-joi-validation": "^5.0.0",
+		"graphql": "^16.2.0",
 		"joi": "^17.5.0",
 		"json-server": "^0.17.0",
 		"jsonwebtoken": "^8.5.1",

@@ -8,7 +8,7 @@ const typeDefs = gql`
 		id: Int!
 		username: String!
 		gifts: [Gift!]!
-		seeking: [Gift!]!
+		seeking: [Gift!]
 	}
 
 	type Gift {
@@ -26,6 +26,7 @@ const typeDefs = gql`
 		authorId: Int!
 		imageUrl: String
 		seekers: [User!]
+		seekersCount: Int!
 	}
 
 	enum City {
@@ -91,7 +92,7 @@ const resolvers = {
 	Query: {
 		users: async () => {
 			const users = await prisma.user.findMany({
-				include: { gifts: true },
+				include: { gifts: true, seeking: true },
 			});
 			return users;
 		},
@@ -103,7 +104,7 @@ const resolvers = {
 			return user;
 		},
 		gifts: async () => {
-			const gifts = await prisma.gift.findMany();
+			const gifts = await prisma.gift.findMany({ include: { seekers: true } });
 			return gifts;
 		},
 		gift: async (parent, args) => {
@@ -117,12 +118,14 @@ const resolvers = {
 	},
 	User: {
 		gifts: async (parent) => {
-			const user = await prisma.user.findUnique({
-				where: { id: parent.id },
-				include: { gifts: true },
+			const gifts = await prisma.gift.findMany({
+				where: { authorId: parent.id },
+				include: {
+					seekers: true,
+				},
 			});
 
-			return user.gifts;
+			return gifts;
 		},
 		seeking: async (parent) => {
 			const user = await prisma.user.findUnique({
@@ -142,6 +145,9 @@ const resolvers = {
 		},
 		seekers: async (parent) => {
 			return parent.seekers;
+		},
+		seekersCount: async (parent) => {
+			return parent.seekers ? parent.seekers.length : 0;
 		},
 	},
 };

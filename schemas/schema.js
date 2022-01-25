@@ -1,5 +1,6 @@
-const { gql } = require('apollo-server');
+const { gql, UserInputError } = require('apollo-server');
 const { PrismaClient } = require('prisma/prisma-client');
+const jwt = require('jsonwebtoken');
 
 const prisma = new PrismaClient();
 
@@ -27,6 +28,12 @@ const typeDefs = gql`
 		imageUrl: String
 		seekers: [User!]
 		seekersCount: Int!
+	}
+
+	type Token {
+		id: Int!
+		username: String!
+		value: String!
 	}
 
 	enum City {
@@ -85,6 +92,22 @@ const typeDefs = gql`
 		user(id: Int!): User
 		gifts: [Gift!]!
 		gift(id: Int!): Gift
+		latestGifts(amount: Int!): [Gift!]!
+	}
+
+	type Mutation {
+		registerUser(username: String!, password: String!): User
+		createGift(
+			name: String!
+			description: String!
+			city: City!
+			location: String!
+			lat: Float!
+			lng: Float!
+			difficulty: Int!
+			imageUrl: String!
+		): Gift
+		login(username: String!, password: String!): Token
 	}
 `;
 
@@ -114,6 +137,83 @@ const resolvers = {
 			});
 
 			return gift;
+		},
+		latestGifts: async (parent, args) => {
+			const gifts = await prisma.gift.findMany({
+				include: { seekers: true },
+				orderBy: {
+					startDate: 'desc',
+				},
+				take: args.amount,
+			});
+
+			return gifts;
+		},
+	},
+	Mutation: {
+		registerUser: async (parent, args) => {
+			const newUser = await prisma.user.create({
+				data: {
+					username: args.username,
+					password: args.password,
+				},
+			});
+			return newUser;
+		},
+		createGift: async (parent, args, context) => {
+			if (!context.user) {
+				throw new UserInputError('Auth error');
+			}
+
+			const loggedUser = context.user;
+
+			try {
+				const newGift = await prisma.gift.create({
+					data: {
+						name: args.name,
+						description: args.description,
+						city: args.city,
+						location: args.location,
+						lat: Number(args.lat),
+						lng: Number(args.lng),
+						difficulty: Number(args.difficulty),
+						authorId: loggedUser.id,
+						imageUrl: args.imageUrl,
+						active: true,
+					},
+				});
+				return newGift;
+			} catch (e) {
+				console.log('e.message', e.message);
+				throw new UserInputError(e.message);
+			}
+		},
+		login: async (parent, args) => {
+			const { username, password } = args;
+
+			try {
+				const user = await prisma.user.findUnique({
+					where: { username: username },
+				});
+
+				if (user !== null && user.password === password) {
+					const userPayload = { name: user.username, id: user.id };
+					const accessToken = jwt.sign(
+						userPayload,
+						process.env.JWT_ACCESS_SECRET
+					);
+					return {
+						id: user.id,
+						username: user.username,
+						value: accessToken,
+					};
+				} else {
+					throw new UserInputError('Usuario y/o contraseña incorrecto/s');
+				}
+			} catch (e) {
+				console.log('e.message', e.message);
+				throw new UserInputError(e.message);
+			}
 		},
 	},
 	User: {
